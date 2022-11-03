@@ -216,17 +216,46 @@ void tablet_set_logical_size(SpiceTabletInstance *tablet G_GNUC_UNUSED, int widt
 	g_debug("TODO: %s UNIMPLEMENTED. (width %dx%d)", __func__, width, height);
 }
 
+void tablet_buttons(SpiceTabletInstance *tablet, uint32_t buttons_state)
+{
+	static uint32_t last_buttons_state = 0;
+	DWORD dwFlags = 0;
+
+	if ((last_buttons_state & SPICE_MOUSE_BUTTON_LEFT) && !(buttons_state  & SPICE_MOUSE_BUTTON_LEFT))
+		dwFlags |= MOUSEEVENTF_LEFTUP;
+	if (!(last_buttons_state & SPICE_MOUSE_BUTTON_LEFT) && (buttons_state  & SPICE_MOUSE_BUTTON_LEFT))
+		dwFlags |= MOUSEEVENTF_LEFTDOWN;
+	if ((last_buttons_state & SPICE_MOUSE_BUTTON_MIDDLE) && !(buttons_state  & SPICE_MOUSE_BUTTON_MIDDLE))
+		dwFlags |= MOUSEEVENTF_MIDDLEUP;
+	if (!(last_buttons_state & SPICE_MOUSE_BUTTON_MIDDLE) && (buttons_state  & SPICE_MOUSE_BUTTON_MIDDLE))
+		dwFlags |= MOUSEEVENTF_MIDDLEDOWN;
+	if ((last_buttons_state & SPICE_MOUSE_BUTTON_RIGHT) && !(buttons_state  & SPICE_MOUSE_BUTTON_RIGHT))
+		dwFlags |= MOUSEEVENTF_RIGHTUP;
+	if (!(last_buttons_state & SPICE_MOUSE_BUTTON_RIGHT) && (buttons_state  & SPICE_MOUSE_BUTTON_RIGHT))
+		dwFlags |= MOUSEEVENTF_RIGHTDOWN;
+
+	last_buttons_state = buttons_state;
+
+	INPUT in = {
+		.type = INPUT_MOUSE,
+		.mi.dwFlags = dwFlags,
+		.mi.mouseData = 0,
+		.mi.time = 0
+	};
+
+	SendInput(1, &in, sizeof(in));
+}
+
 void tablet_position(SpiceTabletInstance *tablet, int x, int y, uint32_t buttons_state)
 {
 	SetCursorPos(x, y);
+
+	tablet_buttons(tablet, buttons_state);
 }
 
 void tablet_wheel(SpiceTabletInstance *tablet, int wheel_motion, uint32_t buttons_state)
 {
-}
-
-void tablet_buttons(SpiceTabletInstance *tablet, uint32_t buttons_state)
-{
+	tablet_buttons(tablet, buttons_state);
 }
 
 static const SpiceTabletInterface tablet_sif = {
