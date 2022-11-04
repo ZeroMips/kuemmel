@@ -129,6 +129,7 @@ static QXLCursorCmd *create_cursor_set_cmd(PTR_INFO *ptr_info)
 {
 	QXLCursorCmd *cmd;
 	QXLCursor *cursor;
+	unsigned int height_factor = 1;
 
 	cmd = (QXLCursorCmd*)calloc(1, sizeof(*cmd) + sizeof(*cursor) + ptr_info->BufferSize);
 	if (!cmd)
@@ -140,18 +141,24 @@ static QXLCursorCmd *create_cursor_set_cmd(PTR_INFO *ptr_info)
 	switch(ptr_info->ShapeInfo.Type) {
 	case DXGI_OUTDUPL_POINTER_SHAPE_TYPE_MONOCHROME:
 		cursor->header.type = SPICE_CURSOR_TYPE_MONO;
+		/*
+		 * height value is twice as big as expected, probably because pixels are present
+		 * two times: once as AND mask, once as XOR-mask
+		 */
+		height_factor = 2;
 		break;
 	case DXGI_OUTDUPL_POINTER_SHAPE_TYPE_COLOR:
-		cursor->header.type = SPICE_CURSOR_TYPE_COLOR32;
+		cursor->header.type = SPICE_CURSOR_TYPE_ALPHA;
 		break;
 	default:
 	case DXGI_OUTDUPL_POINTER_SHAPE_TYPE_MASKED_COLOR:
+		printf("ShapeInfo.Type %d not implemented, try SPICE_CURSOR_TYPE_ALPHA\n", ptr_info->ShapeInfo.Type);
 		cursor->header.type = SPICE_CURSOR_TYPE_ALPHA;
 		break;
 	};
 
 	cursor->header.width = ptr_info->ShapeInfo.Width;
-	cursor->header.height = ptr_info->ShapeInfo.Height;
+	cursor->header.height = ptr_info->ShapeInfo.Height / height_factor;
 
 	cursor->header.hot_spot_x = ptr_info->ShapeInfo.HotSpot.x;
 	cursor->header.hot_spot_y = ptr_info->ShapeInfo.HotSpot.y;
