@@ -342,9 +342,6 @@ void ProcessFrame(DX_RESOURCES *rsrc, FRAME_DATA *current_data, GAsyncQueue *dra
 
 		g_async_queue_push(draw_queue, drawable);
 
-		static unsigned int pushed = 0;
-		printf("pushed %u\n", ++pushed);
-
 		spice_qxl_wakeup(display_sin);
 
 		pDirtyRect++;

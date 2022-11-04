@@ -53,8 +53,6 @@ static void timer_start(SpiceTimer *timer, uint32_t ms)
 {
 	timer_cancel(timer);
 
-	printf("timer_start, %ums\n", ms);
-
 	timer->source = g_timeout_source_new(ms);
 
 	g_source_set_callback(timer->source, timer_func, timer, NULL);
@@ -105,8 +103,6 @@ static gboolean watch_func(GIOChannel *source, GIOCondition condition, gpointer 
 	SpiceWatch *watch = data;
 	int fd = g_io_channel_unix_get_fd(source);
 
-	printf("watch_func, fd %d\n", fd);
-
 	watch->func(fd, giocondition_to_spice_event(condition), watch->opaque);
 
 	return TRUE;
@@ -132,7 +128,6 @@ static SpiceWatch *watch_add(int fd, int event_mask, SpiceWatchFunc func, void *
 {
 	SpiceWatch *watch;
 
-	printf("watch_add, fd %d\n", fd);
 	watch = calloc(1, sizeof(SpiceWatch));
 	watch->channel = g_io_channel_unix_new(fd);
 	watch->func = func;
@@ -153,7 +148,7 @@ static void watch_remove(SpiceWatch *watch)
 
 static void channel_event(int event, SpiceChannelEventInfo *info)
 {
-	printf("channel event %d [connection_id %d|type %d|id %d|flags %d]",
+	printf("channel event %d [connection_id %d|type %d|id %d|flags %d]\n",
 			event, info->connection_id, info->type, info->id, info->flags);
 	if (event == SPICE_CHANNEL_EVENT_INITIALIZED && info->type == SPICE_CHANNEL_MAIN) {
 		char from[NI_MAXHOST + NI_MAXSERV + 128];
@@ -353,9 +348,6 @@ static int get_command(QXLInstance *qin, struct QXLCommandExt *cmd)
 	if (!drawable)
 		return 0;
 
-	static unsigned int pulled = 0;
-	printf("pulled %u\n", ++pulled);
-
 	cmd->group_id = 0;
 	cmd->flags = 0;
 	cmd->cmd.type = QXL_CMD_DRAW;
@@ -395,8 +387,6 @@ static int get_cursor_command(QXLInstance *qin, struct QXLCommandExt *cmd)
 
 	if (!cursor_cmd)
 		return 0;
-
-	printf("cursor_cmd, x %u, y %u\n", cursor_cmd->u.position.x, cursor_cmd->u.position.y);
 
 	cmd->group_id = 0;
 	cmd->flags = 0;
