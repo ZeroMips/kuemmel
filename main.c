@@ -3,6 +3,7 @@
 
 #include <spice-server/spice.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <ws2tcpip.h>
 
 #include "display.h"
@@ -190,7 +191,26 @@ SpiceCoreInterface core = {
 
 static void kbd_push_key(SpiceKbdInstance *sin, uint8_t frag)
 {
-	printf("kbd_push_key %02x\n", frag);
+	static bool is_extendedkey = false;
+	DWORD dwFlags = KEYEVENTF_SCANCODE
+		| (is_extendedkey ? KEYEVENTF_EXTENDEDKEY : 0)
+		| ((frag & 0x80) ? KEYEVENTF_KEYUP : 0);
+
+	if (frag ==224) {
+		is_extendedkey = true;
+		return;
+	}
+
+	INPUT in = {
+		.type = INPUT_KEYBOARD,
+		.ki.dwFlags = dwFlags,
+		.ki.wScan = frag & 0x7f,
+		.ki.time = 0
+	};
+
+	SendInput(1, &in, sizeof(in));
+
+	is_extendedkey = false;
 }
 
 static uint8_t kbd_get_leds(SpiceKbdInstance *sin)
