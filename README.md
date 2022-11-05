@@ -13,3 +13,7 @@ For acquiring screen data it uses [Windows Desktop Duplication API](https://lear
 The reference build environment is msys2/mingw64.
 Glib and libspice-server are available as packages.
 CMake and ninja are used for building.
+
+# State
+This project is still on proof of concept state.
+There is a lot of hacks in the code, e.g. the screen resolution is hard coded.
